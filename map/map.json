@@ -1,0 +1,22 @@
+{
+  "attribution": "© OpenStreetMap contributors",
+  "attributionUrl": "https://www.openstreetmap.org/copyright",
+  "viewBox": [
+    5835.826,
+    6537.028,
+    1966.105,
+    3170.866
+  ],
+  "bounds": {
+    "north": 41,
+    "south": 40.45,
+    "west": -112.15,
+    "east": -111.7
+  },
+  "projection": "EPSG:3857 Web Mercator; SVG units are a uniform scale of Mercator meters with y flipped",
+  "earthRadius": 6378137,
+  "scale": 0.03924848488138708,
+  "offsetX": 495832.7853610874,
+  "offsetY": 203263.8436396875,
+  "formula": "x = scale * earthRadius * lonRadians + offsetX; y = offsetY - scale * earthRadius * ln(tan(pi / 4 + latRadians / 2))"
+}
