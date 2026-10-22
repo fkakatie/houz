@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f6f3ec">
+  <title>Houz</title>
+  <!-- Each view's own stylesheet is added by scripts/app.js the first time it is shown. -->
+  <link rel="stylesheet" href="styles/styles.css">
+  <script type="module" src="scripts/app.js"></script>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <a class="brand" href="#/">Houz</a>
+      <nav aria-label="Primary">
+        <a href="#/">
+          <img class="icon" src="icons/house.svg" alt="">
+          <span>Houses</span>
+        </a>
+        <a href="#/add">
+          <img class="icon" src="icons/plus.svg" alt="">
+          <span>Add House</span>
+        </a>
+        <a href="#/ladder">
+          <img class="icon" src="icons/ladder.svg" alt="">
+          <span class="full">Price Ladder</span>
+          <span class="short">Ladder</span>
+        </a>
+        <a href="#/settings">
+          <img class="icon" src="icons/sliders.svg" alt="">
+          <span>Settings</span>
+        </a>
+      </nav>
+    </header>
+    <p class="notice" hidden></p>
+    <main></main>
+  </div>
+  <p class="announcement" role="status"></p>
+  <dialog class="confirm" aria-labelledby="confirm-title">
+    <form method="dialog">
+      <h2 id="confirm-title"></h2>
+      <p></p>
+      <div class="actions">
+        <button class="button" value="cancel"></button>
+        <button class="button primary" value="confirm"></button>
+      </div>
+    </form>
+  </dialog>
+  <noscript>Houz needs JavaScript to run.</noscript>
+</body>
+</html>
