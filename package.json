@@ -1,0 +1,22 @@
+{
+  "name": "houz",
+  "description": "a stupidly personal house-evaluation app: record observations, score fit, and estimate costs.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "^20.19.0 || >=22.13.0"
+  },
+  "scripts": {
+    "test": "node --test",
+    "lint": "npm run lint:js && npm run lint:css",
+    "lint:js": "eslint .",
+    "lint:css": "stylelint \"styles/*.css\""
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.0",
+    "eslint": "^10.13.0",
+    "globals": "^17.13.0",
+    "stylelint": "^17.16.0"
+  }
+}
