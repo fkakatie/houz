@@ -1,0 +1,600 @@
+/* ==========================================================================
+   Houses collection
+   ========================================================================== */
+
+/* The house cards: one column on a phone, more as the screen widens. */
+.collection .houses {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A card is linked (see styles.css): a click anywhere on it acts on its address,
+   the link, or while comparing, the checkbox's label. */
+.collection .houses .card,
+.collection .preview .card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* While comparing, the address is the checkbox's label, which the browser gives a plain cursor. */
+.collection .houses .address label {
+  cursor: pointer;
+}
+
+.collection .houses .body,
+.collection .preview .body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "address fit"
+    "facts fit"
+    "specs specs";
+  column-gap: var(--space-4);
+  padding: var(--space-4) var(--space-5) var(--space-5);
+}
+
+.collection .houses .address,
+.collection .preview .address {
+  grid-area: address;
+  font-size: var(--text-l);
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.collection .houses .facts,
+.collection .preview .facts {
+  grid-area: facts;
+  margin-top: var(--space-1);
+}
+
+.collection .houses .fit,
+.collection .preview .fit {
+  grid-area: fit;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.collection .houses .fit .score,
+.collection .preview .fit .score {
+  color: var(--color-accent-strong);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.collection .houses .fit.low .score,
+.collection .preview .fit.low .score {
+  color: var(--color-under-contract);
+}
+
+.collection .houses .fit .label,
+.collection .preview .fit .label {
+  margin-top: var(--space-1);
+  color: var(--color-muted);
+  font-size: var(--text-s);
+}
+
+.collection .houses .fit.unavailable,
+.collection .preview .fit.unavailable {
+  max-width: 7rem;
+}
+
+/* A card's spec grid spans both columns of its body, set tighter than on House Detail. */
+.collection .houses .specs,
+.collection .preview .specs {
+  grid-area: specs;
+  gap: var(--space-4);
+  margin-top: var(--space-3);
+}
+
+/* With no houses yet there is no Cards | Map switch, so the title stands alone. */
+.collection > h1 {
+  margin-bottom: var(--space-3);
+}
+
+/* Cards | Map: two radios drawn as one segmented control. */
+.collection .view {
+  display: flex;
+  padding: 2px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+}
+
+.collection .view label {
+  position: relative;
+  display: grid;
+  color: var(--color-muted);
+  font-size: var(--text-s);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.collection .view label span {
+  display: grid;
+  place-items: center;
+  min-height: calc(var(--tap-target) - 6px);
+  padding: 0 var(--space-4);
+  border-radius: calc(var(--radius-control) - 2px);
+}
+
+/* The radio covers its label, so it stays clickable and focusable while its name is what shows. */
+.collection .view input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.collection .view input:checked + span {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-strong);
+}
+
+.collection .view input:focus-visible + span {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+/* Map shows where the shown houses are, so the cards, their order, and Compare are put away; Cards puts the map away.
+   The map says itself when nothing is shown, so the note under the cards is put away too. */
+.collection[data-view="map"] .houses,
+.collection[data-view="map"] .controls .sort,
+.collection[data-view="map"] .controls [popovertarget="sort-options"],
+.collection[data-view="map"] .controls .tools,
+.collection[data-view="map"] > .note,
+.collection[data-view="cards"] .map {
+  display: none;
+}
+
+/* With Sort and Compare put away, Search and Show share one row on a phone. */
+.collection[data-view="map"] .controls {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "search show";
+}
+
+/* Search, Show, Sort, and Compare above the collection.
+   On a phone: search across the top, then a row of Show, Sort, and Compare. */
+.collection .controls {
+  display: grid;
+  grid-template-columns: 1fr repeat(2, minmax(0, 1.2fr));
+  grid-template-areas:
+    "search search search"
+    "show sort compare";
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.collection .controls .search {
+  grid-area: search;
+  display: grid;
+}
+
+.collection .controls select,
+.collection .controls .search input {
+  min-height: var(--tap-target);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  width: 100%;
+}
+
+/* A magnifying glass at the start of the field marks it as a search. */
+.collection .controls .search input {
+  padding-left: calc(var(--space-3) + 16px + var(--space-2));
+  background: var(--color-surface) url("../icons/search.svg") var(--space-3) center / 16px no-repeat;
+}
+
+/* Buttons are set smaller on a phone, so Show, Sort, and Compare share one row. */
+.collection .controls .button {
+  padding: 0 var(--space-2);
+  font-size: var(--text-s);
+}
+
+.collection .controls [popovertarget="show-options"] {
+  grid-area: show;
+}
+
+.collection .controls [popovertarget="sort-options"] {
+  grid-area: sort;
+}
+
+/* Show and Sort fill their thirds of the row and name their current choice, shortened if it runs out of room. */
+.collection .controls .trigger {
+  gap: var(--space-1);
+}
+
+.collection .controls .trigger span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collection .controls .trigger::after {
+  content: "";
+  flex: none;
+  /* Smaller than the disclosure chevron, to leave the row room for the labels. */
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid var(--color-muted);
+  border-bottom: 2px solid var(--color-muted);
+  transform: translateY(-25%) rotate(45deg);
+}
+
+/* While a dialog is open the page beneath neither scrolls nor takes clicks, so a tap outside only closes the dialog. */
+html:has(.controls [popover]:popover-open) {
+  overflow: hidden;
+}
+
+.shell:has(.controls [popover]:popover-open) {
+  pointer-events: none;
+}
+
+/* Show and Sort open as dialogs in the middle of the screen and close with a tap outside. */
+.collection .controls [popover] {
+  pointer-events: auto;
+  inset: 0;
+  width: calc(100% - 2 * var(--space-4));
+  max-width: 24rem;
+  max-height: 80dvh;
+  margin: auto;
+  padding: var(--space-5);
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+/* The dialog's fixed position anchors its close button top right. */
+.collection .controls [popover] .close {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  display: grid;
+  place-items: center;
+  width: var(--tap-target);
+  height: var(--tap-target);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: none;
+  cursor: pointer;
+  transition: background-color 120ms;
+}
+
+.collection .controls [popover] .close img {
+  width: 24px;
+  height: 24px;
+}
+
+.collection .controls [popover] .close:focus-visible {
+  background: var(--color-accent-soft);
+}
+
+@media (hover: hover) {
+  .collection .controls [popover] .close:hover {
+    background: var(--color-accent-soft);
+  }
+}
+
+/* A legend normally sits in its fieldset's top border, outside the padding; floated, it is ordinary content. */
+.collection .controls legend {
+  float: left;
+  width: 100%;
+}
+
+/* Each dialog's caption is its title. */
+.collection .controls legend,
+.collection .controls .menu > span {
+  margin-bottom: var(--space-2);
+  font-weight: 700;
+}
+
+.collection .controls .menu {
+  display: grid;
+}
+
+/* Plain checkboxes, so showing a status reads as a filter rather than a row of buttons. */
+.collection .controls .statuses {
+  clear: both;
+  display: flex;
+  flex-direction: column;
+}
+
+.collection .controls .statuses label,
+.collection .controls .sort .grouping {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap-target);
+  cursor: pointer;
+}
+
+/* Group by status sits under the sort menu, as an option of the sort. */
+.collection .controls .sort .grouping {
+  margin-top: var(--space-2);
+}
+
+.collection .controls .statuses input,
+.collection .controls .sort .grouping input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+/* Actions on the collection, such as Compare. On a phone, Compare takes its own cell in the toolbar. */
+.collection .controls .tools {
+  display: contents;
+}
+
+.collection .controls .tools[hidden] {
+  display: none;
+}
+
+/* Cancel is a small × on Compare's top-right corner, so it needs no room of its own.
+   The toolbar sets its buttons smaller on a phone and full size on wider screens; the × keeps its own size. */
+.collection .controls .tools .cancel {
+  grid-area: compare;
+  justify-self: end;
+  align-self: start;
+  padding: 0;
+  font-size: 0;
+}
+
+/* The label and an invisible copy of the widest label share one cell, fixing the button's width. */
+.collection .controls .compare {
+  grid-area: compare;
+  display: inline-grid;
+  place-items: center;
+}
+
+.collection .controls .compare > span {
+  grid-area: 1 / 1;
+}
+
+.collection .controls .compare .sizer {
+  visibility: hidden;
+}
+
+/* While choosing, Compare reads as switched on and shows the count; at two it fills in and opens the comparison.
+   Show reads as switched on the same way while it hides a status. */
+.collection .controls .trigger.filtered,
+.collection .controls .trigger.filtered:focus-visible,
+.collection .controls .compare[aria-disabled="true"],
+.collection .controls .compare[aria-disabled="true"]:focus-visible {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-strong);
+}
+
+.collection .controls .compare[aria-disabled="true"] {
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .collection .controls .trigger.filtered:hover,
+  .collection .controls .compare[aria-disabled="true"]:hover {
+    border-color: var(--color-accent);
+    background: var(--color-accent-soft);
+  }
+}
+
+/* Wider screens: one wrapping row, with Show and Sort laid out in full under their own captions. */
+@media (min-width: 600px) {
+  .collection > h1 {
+    margin-bottom: var(--space-5);
+  }
+
+  .collection .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+
+  .collection .controls .button {
+    padding: 0 var(--space-5);
+    font-size: inherit;
+  }
+
+  /* Show and Sort are in view, so their dialog buttons are not needed. */
+  .collection .controls .trigger,
+  .collection .controls [popover] .close {
+    display: none;
+  }
+
+  /* The dialogs sit in the row as ordinary content. */
+  .collection .controls [popover] {
+    position: static;
+    inset: auto;
+    width: auto;
+    max-width: none;
+    height: auto;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    color: inherit;
+    overflow: visible;
+  }
+
+  .collection .controls .show {
+    display: block;
+  }
+
+  .collection .controls legend,
+  .collection .controls .search span,
+  .collection .controls .sort span {
+    color: var(--color-muted);
+    font-size: var(--text-s);
+    font-weight: 400;
+  }
+
+  /* The Show, Search, and Sort captions sit just above their controls. */
+  .collection .controls legend,
+  .collection .controls .search span,
+  .collection .controls .menu > span {
+    margin-bottom: var(--space-1);
+  }
+
+  /* On a phone the placeholder names the search and the caption is visually hidden; here the caption shows. */
+  .collection .controls .search span {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+  }
+
+  /* The caption names the search here, so the placeholder would only repeat it. */
+  .collection .controls .search input::placeholder {
+    color: transparent;
+  }
+
+  /* Search starts narrower than the sort menu, so Search, Show, Sort, and Compare fit one row on a wide screen,
+     and grows into whatever room is left. */
+  .collection .controls .search {
+    flex: 1 1 10rem;
+    min-width: 0;
+    max-width: 16rem;
+  }
+
+  /* With Sort and Compare put away, the map leaves Search the room up to Show. */
+  .collection[data-view="map"] .controls .search {
+    max-width: none;
+  }
+
+  /* Group by status sits on the Sort caption's line, so it reads as an option of the sort, not another filter.
+     The sort menu flexes within a range, filling a narrow screen without stretching across a wide one,
+     and never narrower than its longest option, so the choice is never cut off. */
+  .collection .controls .sort {
+    display: grid;
+    flex: 1 1 12rem;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "caption grouping"
+      "menu menu";
+    align-items: end;
+    column-gap: var(--space-3);
+    min-width: max-content;
+    max-width: 16rem;
+  }
+
+  /* The menu's label lets its caption and select take their own grid areas. */
+  .collection .controls .sort > .menu {
+    display: contents;
+  }
+
+  .collection .controls .menu > span {
+    grid-area: caption;
+  }
+
+  .collection .controls .sort select {
+    grid-area: menu;
+  }
+
+  .collection .controls .sort .grouping {
+    grid-area: grouping;
+    justify-self: end;
+    display: inline-flex;
+    gap: var(--space-1);
+    min-height: 32px;
+    margin-top: 0;
+  }
+
+  .collection .controls .sort .grouping input {
+    width: 16px;
+    height: 16px;
+  }
+
+  .collection .controls .statuses {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0 var(--space-5);
+  }
+
+  .collection .controls .statuses label {
+    display: inline-flex;
+  }
+
+  /* The tools take their own row until the widest layout. */
+  .collection .controls .tools {
+    display: grid;
+    flex-basis: 100%;
+    justify-content: end;
+  }
+
+  /* Compare and its × share one cell, as in the phone's toolbar. */
+  .collection .controls .compare,
+  .collection .controls .tools .cancel {
+    grid-area: 1 / 1;
+  }
+}
+
+/* Wide screens: Search, Show, and Sort sit together on the left, the tools on the right. */
+@media (min-width: 900px) {
+  .collection .controls .tools {
+    flex-basis: auto;
+    margin-left: auto;
+  }
+}
+
+/* The checkbox takes the photo's free top-right corner; the address is its label. */
+.collection .photo .pick {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  z-index: 1;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+.collection .houses .card:has(.pick:checked) {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent);
+}
+
+/* Two are already ticked, so the rest step back. */
+.collection .houses .card:has(.pick:disabled) {
+  opacity: 0.55;
+}
+
+.collection .houses .card:has(.pick:disabled),
+.collection .houses .card:has(.pick:disabled) .pick,
+.collection .houses .card:has(.pick:disabled) label {
+  cursor: default;
+}
+
+@media (min-width: 600px) {
+  .collection .houses {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 900px) {
+  .collection .houses {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

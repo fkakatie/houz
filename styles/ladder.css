@@ -1,0 +1,319 @@
+/* ==========================================================================
+   Price Ladder
+   ========================================================================== */
+
+/* The rail runs through the middle of each rung's photo, joining one rung to the next. */
+.ladder {
+  --photo: 88px;
+  --rail: calc(var(--photo) / 2 - 1px);
+  --spine: 10rem;
+}
+
+.ladder h1 {
+  margin-bottom: var(--space-2);
+}
+
+.ladder .intro {
+  margin-bottom: var(--space-4);
+}
+
+/* Houses hidden from the ladder, kept in plain sight at the top so they are easy to bring back. */
+.ladder > details {
+  margin-bottom: var(--space-4);
+  padding: 0 var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-chip);
+  background: var(--color-surface);
+}
+
+.ladder > details summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--tap-target);
+  font-weight: 600;
+}
+
+.ladder > details ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ladder > details li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.ladder > details li .address {
+  flex: 1 1 10rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.ladder > details > .button {
+  margin: var(--space-2) 0 var(--space-3);
+}
+
+.ladder .rungs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A rung: the house as a compact, linked card (see styles.css), with Hide beside the link rather than inside it.
+   As on the Houses cards, the photo runs to the card's edges; only the text is padded. */
+.ladder .rung {
+  position: relative;
+}
+
+.ladder .rung .card {
+  display: grid;
+  grid-template-columns: var(--photo) minmax(0, 1fr);
+  grid-template-areas:
+    "photo address"
+    "photo price"
+    "photo status"
+    "photo fit";
+  grid-template-rows: auto auto auto 1fr;
+  column-gap: var(--space-3);
+  padding: 0 var(--space-3) 0 0;
+  overflow: hidden;
+  border-radius: var(--radius-chip);
+}
+
+.ladder .rung .card > * + * {
+  margin-top: 0;
+}
+
+.ladder .rung .photo {
+  grid-area: photo;
+  aspect-ratio: auto;
+  min-height: var(--photo);
+}
+
+.ladder .rung .photo.missing::before {
+  background-size: 32px;
+}
+
+.ladder .rung .address {
+  grid-area: address;
+  padding-top: var(--space-3);
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.ladder .rung .price {
+  grid-area: price;
+}
+
+/* Flatter than elsewhere, so it fits the compact rung. */
+.ladder .rung .status {
+  grid-area: status;
+  justify-self: start;
+  margin-top: var(--space-1);
+  padding-block: 0;
+}
+
+.ladder .rung .fit {
+  grid-area: fit;
+  align-self: end;
+  padding-bottom: var(--space-3);
+  color: var(--color-muted);
+  font-size: var(--text-s);
+}
+
+.ladder .rung .fit .score {
+  color: var(--color-accent-strong);
+  font-size: var(--text-m);
+  font-weight: 700;
+}
+
+/* Hide is a small × on the rung's top-right corner. */
+.ladder .rung .hide {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+/* A step: the rail from one rung to the next, the price increase on it, and what changes beside it. */
+.ladder .step {
+  margin-left: var(--rail);
+  padding: var(--space-3) 0 var(--space-4) var(--space-4);
+  border-left: 2px solid var(--color-border-strong);
+}
+
+.ladder .step .spine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+}
+
+.ladder .step .increase {
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-control);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-strong);
+  font-weight: 700;
+}
+
+.ladder .step .monthly {
+  color: var(--color-muted);
+  font-size: var(--text-s);
+}
+
+/* How this step compares with the largest on the ladder. */
+.ladder .step .bar {
+  flex-basis: 100%;
+  max-width: 12rem;
+  height: 4px;
+  border-radius: 2px;
+}
+
+.ladder .step .bar > span {
+  width: calc(var(--share) * 100%);
+}
+
+.ladder .changes {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-3) 0 0;
+}
+
+.ladder .changes dt {
+  font-size: var(--text-s);
+  font-weight: 700;
+}
+
+/* Gains and give-ups are marked alike: same color, same weight, so neither reads as the verdict. */
+.ladder .changes dd {
+  position: relative;
+  margin: var(--space-1) 0 0;
+  padding-left: 1.25rem;
+  overflow-wrap: anywhere;
+}
+
+.ladder .changes dd::before {
+  position: absolute;
+  left: 0;
+  color: var(--color-accent-strong);
+  font-weight: 700;
+}
+
+.ladder .gains dd::before {
+  content: "+";
+  content: "+" / "";
+}
+
+.ladder .losses dd::before {
+  content: "−";
+  content: "−" / "";
+}
+
+.ladder .changes .name {
+  font-weight: 600;
+}
+
+.ladder .step .none,
+.ladder .step .unknown {
+  margin-top: var(--space-2);
+  color: var(--color-muted);
+  font-size: var(--text-s);
+}
+
+.ladder > .note {
+  margin-top: var(--space-4);
+}
+
+@media (min-width: 600px) {
+  .ladder {
+    --photo: 112px;
+  }
+
+  .ladder .rung .address {
+    font-size: var(--text-l);
+  }
+}
+
+/* Wide screens: prices and increases line up down a spine on the left, so the climb reads on its own. */
+@media (min-width: 900px) {
+  .ladder .rung .card {
+    grid-template-columns: 168px minmax(0, 1fr);
+    grid-template-areas:
+      "photo address"
+      "photo status"
+      "photo fit";
+    grid-template-rows: auto auto 1fr;
+    column-gap: var(--space-5);
+    margin-left: var(--spine);
+  }
+
+  .ladder .rung .photo {
+    min-height: 112px;
+  }
+
+  .ladder .rung .price {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: calc(var(--spine) - var(--space-4));
+    transform: translateY(-50%);
+    font-size: var(--text-l);
+    font-weight: 700;
+    text-align: right;
+  }
+
+  .ladder .step {
+    display: grid;
+    grid-template-columns: var(--spine) minmax(0, 1fr);
+    margin-left: var(--space-4);
+    padding: 0;
+    border-left: 0;
+  }
+
+  .ladder .step .spine {
+    flex-direction: column;
+    align-items: flex-end;
+    padding: var(--space-4) var(--space-4) var(--space-4) 0;
+    border-right: 2px solid var(--color-border-strong);
+    text-align: right;
+  }
+
+  /* The bar grows leftward from the spine, so every step is measured from the same edge. */
+  .ladder .step .bar {
+    display: flex;
+    justify-content: flex-end;
+    flex-basis: auto;
+    width: 100%;
+    max-width: none;
+    margin-top: var(--space-1);
+  }
+
+  .ladder .step .body {
+    padding: var(--space-4) 0 var(--space-4) var(--space-5);
+  }
+
+  .ladder .changes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-5);
+    margin-top: 0;
+  }
+
+  .ladder .step .none {
+    margin-top: 0;
+  }
+
+  .ladder .changes .gains {
+    grid-column: 1;
+  }
+
+  .ladder .changes .losses {
+    grid-column: 2;
+  }
+}

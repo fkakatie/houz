@@ -1,0 +1,382 @@
+/* ==========================================================================
+   Houses map
+   ========================================================================== */
+
+/* Map view: Houses becomes one screen, and the map fills what is left of it below the controls.
+   The shell, main, and the collection each stretch to hand the remaining height down. */
+.shell:has(.collection[data-view="map"]) {
+  display: flex;
+  flex-direction: column;
+}
+
+/* In a flex column, the header's centering margins would shrink it to its content; it keeps its full width. */
+.shell:has(.collection[data-view="map"]) > header {
+  width: 100%;
+}
+
+/* main gives up its side padding so the map can reach the screen's edges,
+   and at the bottom keeps only the room the fixed navigation takes. */
+.shell > main:has(> .collection[data-view="map"]) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding-inline: 0;
+  padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+}
+
+/* The title and controls keep main's usual side padding as grid columns; the map spans them. */
+.collection[data-view="map"] {
+  flex: 1;
+  display: grid;
+  grid-template-columns: var(--space-4) minmax(0, 1fr) var(--space-4);
+  grid-template-rows: auto auto minmax(20rem, 1fr);
+}
+
+.collection[data-view="map"] > * {
+  grid-column: 2;
+}
+
+.collection[data-view="map"] > .map {
+  grid-column: 1 / -1;
+}
+
+/* The map fills its area. The note and attribution lie over its lower edge,
+   and a selected house's preview docks beneath it, so the map makes room rather than hiding markers behind it. */
+.map {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+}
+
+/* The map's frame. The script fits the houses to whatever shape this area ends up.
+   Gestures that start here move the map, not the page; the page keeps its own scrolling everywhere else. */
+.map .viewport {
+  grid-row: 1 / 3;
+  grid-column: 1 / 3;
+  position: relative;
+  overflow: hidden;
+  background: var(--color-surface);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.map .viewport.dragging {
+  cursor: grabbing;
+}
+
+/* The map and its markers, stacked in the frame. While a gesture is under way the map is moved as a picture from its corner. */
+.map .viewport svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.map .base {
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+/* Small labels on a pale backing, readable over the map without standing out from it. Taps pass through to markers.
+   Each has its own column, so a long note wraps instead of running under the attribution.
+   Positioned, so they stay above the map's frame, which is positioned too. */
+.map .note,
+.map .attribution {
+  position: relative;
+  grid-row: 2;
+  align-self: end;
+  margin: var(--space-2);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-control);
+  background: var(--color-canvas);
+  color: var(--color-muted);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.map .note {
+  grid-column: 1;
+  justify-self: start;
+  font-size: var(--text-s);
+}
+
+.map .attribution {
+  grid-column: 2;
+  font-size: 0.75rem;
+}
+
+/* The attribution's link takes taps, unlike the label around it; the arrow marks it as a link, as on View on URE. */
+.map .attribution a {
+  text-decoration: none;
+  pointer-events: auto;
+}
+
+@media (hover: hover) {
+  .map .attribution a:hover {
+    text-decoration: underline;
+  }
+}
+
+/* Reset view: small, top right, quieter than the markers. */
+.map .reset {
+  position: relative;
+  grid-row: 1;
+  grid-column: 2;
+  align-self: start;
+  justify-self: end;
+  min-height: var(--tap-target);
+  margin: var(--space-2);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-canvas);
+  color: var(--color-text);
+  font-size: var(--text-s);
+  font-weight: 600;
+  opacity: 0.85;
+  cursor: pointer;
+}
+
+.map .reset:focus-visible {
+  opacity: 1;
+}
+
+@media (hover: hover) {
+  .map .reset:hover {
+    opacity: 1;
+  }
+}
+
+/* With nothing to mark, the note explains why from the middle of the map. */
+.map .note.empty {
+  grid-row: 1 / 3;
+  grid-column: 1 / 3;
+  align-self: center;
+  justify-self: center;
+  max-width: 20rem;
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-text);
+  text-align: center;
+}
+
+.collection .map .preview {
+  grid-row: 3;
+  grid-column: 1 / 3;
+}
+
+/* --unit is map units per CSS pixel, so each marker keeps one size on screen however large the map is drawn. */
+.map .pin {
+  transform: scale(var(--unit, 1));
+}
+
+.map .marker {
+  cursor: pointer;
+  outline: none;
+}
+
+.map .target {
+  fill: transparent;
+}
+
+.map .ring {
+  fill: none;
+  stroke: none;
+}
+
+/* Each dot takes its status pill's color: green for available, amber for under contract, maroon for sold. */
+.map .dot {
+  stroke: var(--color-surface);
+  stroke-width: 2.5;
+}
+
+.map .marker[data-status="available"] .dot {
+  fill: var(--color-available);
+}
+
+.map .marker[data-status="underContract"] .dot {
+  fill: var(--color-under-contract);
+}
+
+.map .marker[data-status="sold"] .dot {
+  fill: var(--color-sold);
+}
+
+.map .marker:focus-visible .ring,
+.map .place:focus-visible .ring {
+  fill: var(--color-surface);
+  stroke: var(--color-accent);
+  stroke-width: 2.5;
+}
+
+/* Selected: larger and edged in the text color, keeping its status color. */
+.map .marker[aria-pressed="true"] .dot {
+  stroke: var(--color-text);
+  stroke-width: 2;
+  transform: scale(1.35);
+}
+
+@media (hover: hover) {
+  .map .marker:hover .dot {
+    stroke: var(--color-text);
+  }
+}
+
+/* A place is a reference point, not a property: a smaller dot in the text color rather than a status color, beneath the houses. */
+.map .place {
+  cursor: pointer;
+  outline: none;
+}
+
+.map .place .dot {
+  fill: var(--color-text);
+}
+
+.map .place[aria-pressed="true"] .dot {
+  transform: scale(1.35);
+}
+
+/* As with a house, the dot's light edge darkens; muted rather than the text color, which the fill already is. */
+@media (hover: hover) {
+  .map .place:hover .dot {
+    stroke: var(--color-muted);
+  }
+}
+
+/* The chosen place's title, haloed so it reads over the map. It never takes taps, so houses beneath it still can. */
+.map .place .label {
+  display: none;
+  fill: var(--color-text);
+  font-size: var(--text-s);
+  font-weight: 600;
+  dominant-baseline: central;
+  paint-order: stroke;
+  stroke: var(--color-surface);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.map .place[aria-pressed="true"] .label {
+  display: inline;
+}
+
+/* The preview is the house's Houses card. On a phone it is made compact so the map keeps its room:
+   the photo, with its status, beside the address, price, and Overall Fit; the specs wait for House Detail.
+   It is docked across the bottom of the map as a panel, not floating over it as a card.
+   Each preview rule adds .map to the Houses card's own selector, so it wins whichever stylesheet loaded first. */
+.collection .map .preview .card {
+  display: grid;
+  grid-template-columns: 102px minmax(0, 1fr);
+  border-width: 1px 0 0;
+  border-radius: 0;
+}
+
+.collection .map .preview .photo {
+  aspect-ratio: auto;
+  min-height: 96px;
+}
+
+/* The marker's color already gives the status, and the narrow photo has no room for the pill. */
+.collection .map .preview .photo .status {
+  display: none;
+}
+
+/* The photo and body touch; the body's padding spaces its contents. */
+.collection .map .preview .body {
+  margin-top: 0;
+  grid-template-areas:
+    "address fit"
+    "facts fit";
+  align-content: center;
+  padding: var(--space-3) var(--space-4);
+}
+
+.collection .map .preview .address {
+  font-size: var(--text-m);
+}
+
+.collection .map .preview .specs {
+  display: none;
+}
+
+/* With the navigation at the top, the map stops a little above the bottom of the window. */
+@media (min-width: 600px) {
+  .shell > main:has(> .collection[data-view="map"]) {
+    padding-bottom: var(--space-5);
+  }
+}
+
+/* Wide screens: the map lines up with the controls above it, and the selected house sits beside it. */
+@media (min-width: 900px) {
+  .collection[data-view="map"] > .map {
+    grid-column: 2;
+  }
+
+  /* Search ends where the map does when a house is selected, leaving the preview's column to Show. */
+  .collection[data-view="map"] .controls .search {
+    flex: 0 1 calc(100% - 22rem);
+  }
+
+  .map {
+    grid-template-columns: minmax(0, 1fr) auto 22rem;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  /* Until a house is selected the map takes the full width; the preview's column opens beside it on selection. */
+  .map:has(> .preview:empty) {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .collection .map .preview:empty {
+    display: none;
+  }
+
+  /* A hairline marks the map's edge against the page, with no card corners. */
+  .map .viewport {
+    border: 1px solid var(--color-border);
+  }
+
+  .collection .map .preview {
+    grid-row: 1 / -1;
+    grid-column: 3;
+    align-self: start;
+    margin-left: var(--space-5);
+  }
+
+  /* Beside the map there is room for the whole Houses card, exactly as in the list. */
+  .collection .map .preview .card {
+    display: flex;
+    border-width: 1px;
+    border-radius: var(--radius-card);
+  }
+
+  .collection .map .preview .photo {
+    aspect-ratio: 16 / 9;
+    min-height: 0;
+  }
+
+  .collection .map .preview .photo .status {
+    display: block;
+  }
+
+  .collection .map .preview .body {
+    margin-top: var(--space-4);
+    grid-template-areas:
+      "address fit"
+      "facts fit"
+      "specs specs";
+    align-content: normal;
+    padding: var(--space-4) var(--space-5) var(--space-5);
+  }
+
+  .collection .map .preview .address {
+    font-size: var(--text-l);
+  }
+
+  .collection .map .preview .specs {
+    display: grid;
+  }
+}

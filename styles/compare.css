@@ -1,0 +1,278 @@
+/* ==========================================================================
+   Compare
+   ========================================================================== */
+
+/* --inset is the cards' padding plus border, so the sticky key lines up with the columns inside the cards.
+   The view itself, not the Compare button on Houses, which shares its name. */
+main > .compare {
+  --inset: calc(var(--space-4) + 1px);
+}
+
+/* The headings, the key, and every row share one grid: two equal house columns, plus a label column on wide screens. */
+.compare .headings,
+.compare .names,
+.compare .row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: var(--space-4);
+}
+
+/* Inset like the cards, so each photo sits over its column of values. */
+.compare .headings {
+  margin-bottom: var(--space-1);
+  padding: 0 var(--inset);
+}
+
+.compare .house {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* The addresses caption the photos, then stay at the top while scrolling, so each column is always named. */
+.compare .names {
+  position: sticky;
+  top: env(safe-area-inset-top);
+  z-index: 5;
+  margin-bottom: var(--space-3);
+  padding: var(--space-2) var(--inset);
+  background: var(--color-canvas);
+}
+
+/* Set like the card headings; a long address wraps rather than being cut off. */
+.compare .names p {
+  font-size: var(--text-l);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.compare .names a {
+  text-decoration: none;
+}
+
+/* Underlined only under a pointer, so they still read as links without looking like body text. */
+@media (hover: hover) {
+  .compare .names a:hover {
+    text-decoration: underline;
+  }
+}
+
+.compare > .card {
+  padding: var(--space-4);
+}
+
+/* Fit, Costs, and the cards after them; the house headings sit side by side instead. */
+.compare > .card + .card {
+  margin-top: var(--space-5);
+}
+
+.compare .row {
+  row-gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+/* On a phone the label takes its own line above the two values. */
+.compare .row > .label {
+  grid-column: 1 / -1;
+  font-weight: 600;
+}
+
+.compare .row .weight,
+.compare .row .context {
+  display: block;
+  color: var(--color-muted);
+  font-size: var(--text-s);
+  font-weight: 400;
+}
+
+/* A value and its difference share a line; everything else in the cell takes a line of its own. */
+.compare .cell {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-2);
+  min-width: 0;
+}
+
+.compare .cell > :not(.value, .amount, .difference, .fact, .points, .status) {
+  flex-basis: 100%;
+}
+
+/* A criterion's score follows its observation, quieter, as on House Detail. */
+.compare .cell .points {
+  color: var(--color-muted);
+  font-size: var(--text-s);
+  font-variant-numeric: tabular-nums;
+}
+
+.compare .cell .value {
+  font-size: var(--text-l);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.compare .cell .value.score {
+  color: var(--color-accent-strong);
+  font-size: var(--text-xl);
+}
+
+.compare .cell .value.muted {
+  font-size: var(--text-s);
+  font-weight: 400;
+}
+
+.compare .cell .bar {
+  width: 100%;
+}
+
+.compare .cell .note,
+.compare .cell .why,
+.compare .cell .delights {
+  color: var(--color-muted);
+  font-size: var(--text-s);
+}
+
+/* How much better this house is on a row (a higher score, a lower cost, more cushion): a small accent tag,
+   so the material gaps between the two stand out at a glance. */
+.compare .cell .difference {
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-control);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-strong);
+  font-size: var(--text-s);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* How much is known: a quiet line of its own under Overall Fit, never styled like a score. */
+.compare .row.known {
+  color: var(--color-muted);
+  font-size: var(--text-s);
+}
+
+.compare .row.known > .label {
+  font-weight: 500;
+}
+
+.compare .cell .amount {
+  font-size: var(--text-l);
+  font-weight: 700;
+}
+
+.compare .cell .amount.partial,
+.compare .cell .amount.muted {
+  font-weight: 600;
+}
+
+.compare .cell .amount.muted {
+  color: var(--color-muted);
+  font-family: inherit;
+  font-size: var(--text-s);
+}
+
+/* Rows that match for both houses, folded into one quiet line. */
+.compare .same {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-muted);
+  font-size: var(--text-s);
+}
+
+/* Unknown for both follows Same for both as part of the same quiet block. */
+.compare .same + .same {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.compare .row.incomplete > .label {
+  color: var(--color-muted);
+}
+
+/* Each category row in Fit opens to its subcategories (bold) and criteria (plain) beneath it.
+   Category and subcategory names sit beside a disclosure arrow, so the levels read as nested. */
+.compare .scores .category .label {
+  padding-left: calc(var(--chevron) + var(--space-3));
+}
+
+/* The row is a grid, so its chevron is taken out of flow, into the room left before the category name. */
+.compare .scores .disclosure {
+  position: relative;
+}
+
+.compare .scores .disclosure::before {
+  position: absolute;
+  top: calc(var(--space-3) + 0.45em);
+  left: 0;
+}
+
+.compare .scores .category[open] {
+  padding-bottom: var(--space-3);
+}
+
+.compare .scores .category > * + * {
+  margin-top: var(--space-3);
+}
+
+.compare .scores .row.criterion > .label {
+  font-weight: 400;
+}
+
+/* A subcategory's score steps down from its category's, so the summary row stays the headline. */
+.compare .scores .row.subcategory .value:not(.muted) {
+  font-size: var(--text-m);
+  font-weight: 600;
+}
+
+.compare .scores .same {
+  margin-left: calc(var(--chevron) + var(--space-3));
+}
+
+/* The house behind on a line steps back, so the one ahead reads first. Criterion facts are marked behind directly. */
+.compare .fact.behind {
+  color: var(--color-muted);
+}
+
+/* Elsewhere, the house carrying the difference tag is ahead, so the other house's figure and bar step back.
+   Property Basics is left out: its tags state size or age, not which is better. */
+.compare :is(.scores, .costs, .projects) .row:has(.difference) > .cell:not(:has(.difference)) :is(.value, .amount) {
+  color: var(--color-muted);
+}
+
+.compare :is(.scores, .costs, .projects) .row:has(.difference) > .cell:not(:has(.difference)) .bar > span {
+  background: var(--color-border-strong);
+}
+
+/* Projects totals close the card, set off by a stronger rule. */
+.compare .row.total {
+  border-top-color: var(--color-border-strong);
+}
+
+@media (min-width: 900px) {
+  main > .compare {
+    --inset: calc(var(--space-5) + 1px);
+  }
+
+  .compare .headings,
+  .compare .names,
+  .compare .row {
+    grid-template-columns: minmax(10rem, 14rem) repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-5);
+  }
+
+  /* No label beside the headings or the key, so the houses start in the second column. */
+  .compare .headings > :first-child,
+  .compare .names > :first-child {
+    grid-column: 2;
+  }
+
+  .compare .row > .label {
+    grid-column: auto;
+  }
+
+  .compare > .card {
+    padding: var(--space-5);
+  }
+}

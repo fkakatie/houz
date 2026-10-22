@@ -1,0 +1,302 @@
+/* ==========================================================================
+   Forms: Settings, Add and Edit House, and the House Detail dialogs
+   ========================================================================== */
+
+/* Loaded with the first view that has a form; the shell and every other view need none of it. */
+
+/* ==========================================================================
+   Form fields
+   ========================================================================== */
+
+/* The label holds the question and the control; the hint and error sit below it, spaced the same. */
+.field,
+.field > label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.field .label {
+  font-weight: 500;
+}
+
+.field .control {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.field input,
+.field textarea {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--tap-target);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+}
+
+/* Numbers read best in fixed-width digits; a showing placeholder keeps the body font. */
+.field input[inputmode="decimal"]:not(:placeholder-shown),
+.field input[inputmode="numeric"]:not(:placeholder-shown),
+.field input[data-coordinate]:not(:placeholder-shown) {
+  font-family: var(--font-mono);
+}
+
+.field input[aria-invalid="true"] {
+  border-color: var(--color-danger);
+}
+
+.field .unit,
+.field .hint {
+  color: var(--color-muted);
+  font-size: var(--text-s);
+}
+
+.field .unit {
+  flex: none;
+}
+
+.field .error {
+  color: var(--color-danger);
+  font-size: var(--text-s);
+}
+
+.field .error:empty {
+  display: none;
+}
+
+.fields {
+  display: grid;
+  /* minmax(0, …) lets a column shrink below its content's natural width, so a field can never push past the card. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+@media (min-width: 600px) {
+  .fields {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  /* Full-row fields: those marked wide, choices with more than three options, and a section's only question. */
+  .fields .wide,
+  .fields .choice:has(.options > label:nth-child(4)),
+  .section .fields > .field:only-child {
+    grid-column: 1 / -1;
+  }
+}
+
+/* The hidden attribute must win over the display values set on fields. */
+.field[hidden] {
+  display: none;
+}
+
+.field textarea {
+  padding: var(--space-2) var(--space-3);
+  resize: vertical;
+  field-sizing: content;
+}
+
+/* ==========================================================================
+   Choice controls: yes / no / unknown, single select, multi-select
+   ========================================================================== */
+
+.choice legend {
+  margin-bottom: var(--space-2);
+}
+
+.choice .options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.options label {
+  position: relative;
+}
+
+/* The real radio or checkbox covers its pill invisibly, so it stays clickable and keyboard-operable. */
+.options input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.options label span {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-target);
+  padding: 0 var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-chip);
+  background: var(--color-surface);
+  transition: background-color 120ms, border-color 120ms, color 120ms;
+}
+
+.options input:checked + span {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-strong);
+  font-weight: 600;
+}
+
+/* Unknown is the unanswered state, so it must not read as an answer. */
+.options .unknown span {
+  color: var(--color-muted);
+}
+
+.options .unknown input:checked + span {
+  border-color: var(--color-border-strong);
+  border-style: dashed;
+  background: none;
+  color: var(--color-muted);
+  font-weight: 500;
+}
+
+.options input:focus-visible + span {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .options label:hover span {
+    border-color: var(--color-border-strong);
+  }
+
+  .options label:hover input:checked + span {
+    border-color: var(--color-accent-strong);
+  }
+}
+
+/* ==========================================================================
+   Section navigation
+   ========================================================================== */
+
+.sections {
+  position: sticky;
+  top: env(safe-area-inset-top);
+  z-index: 5;
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  margin: calc(-1 * var(--space-3)) 0 var(--space-3);
+  padding: var(--space-2) 0;
+  background: var(--color-canvas);
+  /* The list scrolls sideways on a narrow screen; a visible scrollbar would add height. */
+  scrollbar-width: none;
+}
+
+.sections::-webkit-scrollbar {
+  display: none;
+}
+
+.sections button {
+  flex: none;
+  min-height: var(--tap-target);
+  padding: 0 var(--space-4);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: none;
+  color: var(--color-muted);
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 120ms, background-color 120ms;
+}
+
+.sections button[aria-current="true"] {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.sections button:focus-visible {
+  background: var(--color-surface);
+  color: var(--color-text);
+  outline-offset: -2px;
+}
+
+.sections button[aria-current="true"]:focus-visible {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-strong);
+}
+
+@media (hover: hover) {
+  .sections button:hover {
+    background: var(--color-surface);
+    color: var(--color-text);
+  }
+
+  .sections button[aria-current="true"]:hover {
+    background: var(--color-accent-soft);
+    color: var(--color-accent-strong);
+  }
+}
+
+/* Sections scrolled to by the navigation stop just below the sticky bar. */
+.sections ~ * .card,
+.sections ~ .card {
+  scroll-margin-top: calc(var(--tap-target) + var(--space-5));
+}
+
+.card h2:focus {
+  outline: none;
+}
+
+/* ==========================================================================
+   Property form
+   ========================================================================== */
+
+form.house .section + .section {
+  margin-top: var(--space-3);
+}
+
+/* Save stays in reach while scrolling a long form. */
+form.house > .actions {
+  position: sticky;
+  bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+  z-index: 5;
+  justify-content: flex-end;
+  margin-top: var(--space-4);
+  padding: var(--space-3) 0;
+  background: var(--color-canvas);
+}
+
+@media (min-width: 600px) {
+  form.house > .actions {
+    bottom: 0;
+  }
+}
+
+/* Projects: more space between areas than within one, so each area reads as its own unit. */
+.fields:has(> .project) {
+  row-gap: var(--space-6);
+}
+
+/* The area name heads its block, above the field labels inside it. */
+.project > .label {
+  font-weight: 700;
+}
+
+/* Each area's note, cost, and excitement sit under its state pills, tied to them by one quiet rule. */
+.project .details {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  padding-left: var(--space-4);
+  border-left: 2px solid var(--color-border);
+}
+
+.project .details:not(:has(> :not([hidden]))) {
+  display: none;
+}
