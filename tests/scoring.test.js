@@ -116,7 +116,7 @@ function withProject(house, area, project) {
 function bestHouse(overrides = {}) {
   let house = bareHouse({
     hoa: NO,
-    solarStatus: 'none',
+    solarStatus: 'owned',
     foundation: 'clear',
     electrical: 'modern',
     sewer: 'clear',
@@ -127,9 +127,11 @@ function bestHouse(overrides = {}) {
     furnaceStatus: 'good',
     trainMinutes: 5,
     groceryMinutes: 5,
+    lightRailMinutes: 5,
     freewayMinutes: 5,
     skincareOnCounter: YES,
     privatePrimaryBath: YES,
+    bathrooms: 2.5,
     tubAvailability: 'primary',
     outletAtVanity: YES,
     bathroomStorage: ['vanity', 'medicineCabinet', 'linen'],
@@ -273,7 +275,7 @@ test('every weight table sums to 100', () => {
   assert.equal(categoryTotal, 100, 'categories');
 });
 
-test('the hierarchy holds 72 uniquely named criteria', () => {
+test('the hierarchy holds 74 uniquely named criteria', () => {
   const ids = new Set();
   let count = 0;
   for (const categoryDef of CATEGORIES) {
@@ -284,8 +286,8 @@ test('the hierarchy holds 72 uniquely named criteria', () => {
       }
     }
   }
-  assert.equal(count, 72);
-  assert.equal(ids.size, 72);
+  assert.equal(count, 74);
+  assert.equal(ids.size, 74);
 });
 
 test('every criterion reads a field that exists', () => {
@@ -327,19 +329,29 @@ test('interpolate hits breakpoints, interpolates between them, and clamps outsid
 
 test('travel curves match their breakpoint tables', () => {
   assert.equal(interpolate(CURVES.train, 5), 100);
-  assert.equal(interpolate(CURVES.train, 8), 94);
-  assert.equal(interpolate(CURVES.train, 12.5), 80);
+  assert.equal(interpolate(CURVES.train, 8), 88);
+  assert.equal(interpolate(CURVES.train, 12.5), 65);
   assert.equal(interpolate(CURVES.train, 30), 0);
   assert.equal(interpolate(CURVES.train, 45), 0);
-  assert.equal(interpolate(CURVES.grocery, 10), 95);
-  assert.equal(interpolate(CURVES.grocery, 35), 10);
-  assert.equal(interpolate(CURVES.freeway, 25), 40);
+  assert.equal(interpolate(CURVES.lightRail, 5), 100);
+  assert.equal(interpolate(CURVES.lightRail, 17.5), 37.5);
+  assert.equal(interpolate(CURVES.grocery, 10), 90);
+  assert.equal(interpolate(CURVES.grocery, 35), 7.5);
+  assert.equal(interpolate(CURVES.freeway, 25), 15);
   assert.equal(interpolate(CURVES.parents, 15), 100);
-  assert.equal(interpolate(CURVES.parents, 25), 80);
+  assert.equal(interpolate(CURVES.parents, 25), 67.5);
   assert.equal(interpolate(CURVES.parents, 60), 0);
   assert.equal(interpolate(CURVES.airport, 15), 100);
-  assert.equal(interpolate(CURVES.airport, 45), 52.5);
-  assert.equal(interpolate(CURVES.airport, 67.5), 7.5);
+  assert.equal(interpolate(CURVES.airport, 45), 17.5);
+  assert.equal(interpolate(CURVES.airport, 67.5), 0);
+});
+
+test('every travel time past its threshold scores 50 or less', () => {
+  const thresholds = { train: 15, lightRail: 15, grocery: 20, freeway: 15, parents: 30, airport: 30 };
+  for (const [name, minutes] of Object.entries(thresholds)) {
+    assert.equal(interpolate(CURVES[name], minutes), 50, name);
+    assert.ok(interpolate(CURVES[name], minutes + 1) < 50, name);
+  }
 });
 
 test('the exterior-steps curve forgives a step or two', () => {
@@ -392,11 +404,21 @@ test('criteria phrased as undesirable conditions score in reverse', () => {
 
 test('travel criteria use their own curves and keep the raw minutes', () => {
   const house = bareHouse({ trainMinutes: 8, parentsMinutes: 25, airportMinutes: 40 });
-  assertScore(house, 'train', 94);
-  assertScore(house, 'parents', 80);
-  assertScore(house, 'airport', 65);
+  assertScore(house, 'train', 88);
+  assertScore(house, 'parents', 67.5);
+  assertScore(house, 'airport', 25);
   assert.equal(criterion(house, 'train').value, 8);
   assertUnknown(house, 'grocery');
+});
+
+test('bathroom count scores nothing below two and adds nothing past two and a half', () => {
+  assertScore(bareHouse({ bathrooms: 1 }), 'bathroomCount', 0);
+  assertScore(bareHouse({ bathrooms: 1.5 }), 'bathroomCount', 0);
+  assertScore(bareHouse({ bathrooms: 1.75 }), 'bathroomCount', 37.5);
+  assertScore(bareHouse({ bathrooms: 2 }), 'bathroomCount', 75);
+  assertScore(bareHouse({ bathrooms: 2.5 }), 'bathroomCount', 100);
+  assertScore(bareHouse({ bathrooms: 4 }), 'bathroomCount', 100);
+  assertUnknown(bareHouse(), 'bathroomCount');
 });
 
 test('a zero-minute trip is a known best score, not unknown', () => {
@@ -407,8 +429,8 @@ test('categorical mappings follow the spec tables', () => {
   assertScore(bareHouse({ bedroomFloor: 'upper' }), 'bedroomFloor', 100);
   assertScore(bareHouse({ bedroomFloor: 'lower' }), 'bedroomFloor', 100);
   assertScore(bareHouse({ bedroomFloor: 'main' }), 'bedroomFloor', 50);
-  assertScore(bareHouse({ closetType: 'reachIn' }), 'closetType', 70);
-  assertScore(bareHouse({ tubAvailability: 'elsewhere' }), 'tub', 85);
+  assertScore(bareHouse({ closetType: 'reachIn' }), 'closetType', 50);
+  assertScore(bareHouse({ tubAvailability: 'elsewhere' }), 'tub', 50);
   assertScore(bareHouse({ tubAvailability: 'none' }), 'tub', 0);
   assertScore(bareHouse({ propertyType: 'townhouse' }), 'detached', 50);
   assertScore(bareHouse({ propertyType: 'condo' }), 'detached', 35);
@@ -486,13 +508,13 @@ test('unknown garage power keeps the known garage type scored, between power and
   assert.equal(evaluation.criteria.garage.state, KNOWN);
 });
 
-test('Parking & Arrival gives Garage 40%, with every other criterion kept', () => {
+test('Parking & Arrival gives Garage 45% and Driveway 20%', () => {
   const livability = CATEGORIES.find((item) => item.id === 'livability');
   const parking = livability.subcategories.find((item) => item.id === 'parking');
-  assert.equal(parking.weight, 8);
+  assert.equal(parking.weight, 14);
   assert.deepEqual(idWeights(parking.criteria), [
-    ['garage', 40], ['functionalEntry', 13], ['carport', 11], ['driveway', 10], ['exteriorSteps', 8],
-    ['dedicatedUncovered', 5], ['coveredRoute', 5], ['streetParking', 3], ['garageWorkspace', 2], ['parkingCombination', 3],
+    ['garage', 45], ['driveway', 20], ['functionalEntry', 10], ['carport', 6], ['exteriorSteps', 6],
+    ['dedicatedUncovered', 3], ['coveredRoute', 3], ['streetParking', 2], ['garageWorkspace', 2], ['parkingCombination', 3],
   ]);
 });
 
@@ -510,7 +532,7 @@ test('every garage scores above a carport', () => {
 test('covered route is not applicable with an attached garage and scored otherwise', () => {
   const attached = evaluate(bareHouse({ parking: ['attachedGarage', 'driveway'], coveredRoute: NO }), configuredSettings());
   assert.equal(attached.criteria.coveredRoute.state, NOT_APPLICABLE);
-  assert.equal(attached.completeness.applicable, 71);
+  assert.equal(attached.completeness.applicable, 73);
   assertScore(bareHouse({ parking: ['detachedGarage'], coveredRoute: YES }), 'coveredRoute', 100);
   assertScore(bareHouse({ parking: ['driveway'], coveredRoute: NO }), 'coveredRoute', 0);
   assertUnknown(bareHouse({ parking: ['detachedGarage'] }), 'coveredRoute');
@@ -583,8 +605,8 @@ test('irrigation can be not applicable, which removes it from scoring and comple
   const evaluation = evaluate(bareHouse({ irrigation: NA }), configuredSettings());
   assert.equal(evaluation.criteria.irrigation.state, NOT_APPLICABLE);
   assert.equal(evaluation.criteria.irrigation.score, null);
-  assert.equal(evaluation.completeness.applicable, 71);
-  assert.equal(evaluate(bareHouse(), configuredSettings()).completeness.applicable, 72);
+  assert.equal(evaluation.completeness.applicable, 73);
+  assert.equal(evaluate(bareHouse(), configuredSettings()).completeness.applicable, 74);
 });
 
 test('a not-applicable criterion does not drag its subcategory down', () => {
@@ -759,7 +781,7 @@ test('Cash to Acquire is informational and no criterion scores it', () => {
 test('a subcategory is the weighted mean of its known criteria only', () => {
   const house = bareHouse({ trainMinutes: 10, groceryMinutes: 20 });
   const location = subcategory(evaluate(house, configuredSettings()), 'livability', 'location');
-  assertClose(location.score, (45 * 90 + 35 * 60) / 80, 'location');
+  assertClose(location.score, (40 * 80 + 30 * 50) / 70, 'location');
 });
 
 test('one known criterion is not diluted by unknown neighbors', () => {
@@ -771,7 +793,7 @@ test('one known criterion is not diluted by unknown neighbors', () => {
 test('a category renormalizes around subcategories with nothing known', () => {
   const house = bareHouse({ megacouchFits: NO, counterSeating: YES, diningTableSpace: YES });
   const evaluation = evaluate(house, configuredSettings());
-  assertClose(category(evaluation, 'livability').score, (8 * 0 + 4 * 100) / 12, 'livability');
+  assertClose(category(evaluation, 'livability').score, (8 * 0 + 3 * 100) / 11, 'livability');
   assert.equal(subcategory(evaluation, 'livability', 'kitchen').score, null);
 });
 
@@ -785,7 +807,7 @@ test('Contentment is the weighted mean of the answered reactions', () => {
 test('Deep Connection combines proximity, guest usability, and Salem', () => {
   const house = bareHouse({ parentsMinutes: 20, airportMinutes: 30, guestFullBath: NO, litterBoxSpot: YES });
   const evaluation = evaluate(house, configuredSettings());
-  const proximity = (69 * 90 + 31 * 85) / 100;
+  const proximity = (69 * 85 + 31 * 50) / 100;
   assertClose(subcategory(evaluation, 'deepConnection', 'proximity').score, proximity, 'proximity');
   assertClose(subcategory(evaluation, 'deepConnection', 'salem').score, 100, 'salem');
   assertClose(category(evaluation, 'deepConnection').score, 0.45 * 100 + 0.4 * proximity + 0.15 * 0, 'deep connection');
@@ -827,8 +849,8 @@ test('Salem is part of Deep Connection, not Livability, with its criteria unchan
     ['fullyFenced', 15],
   ]);
   assert.deepEqual(idWeights(livability.subcategories), [
-    ['location', 15], ['bathroom', 13], ['primaryBedroom', 10], ['householdStorage', 10], ['exterior', 10],
-    ['parking', 8], ['livingRoom', 8], ['kitchen', 8], ['propertyForm', 8], ['laundry', 6], ['eating', 4],
+    ['location', 16], ['bathroom', 17], ['primaryBedroom', 9], ['householdStorage', 8], ['exterior', 6],
+    ['parking', 14], ['livingRoom', 8], ['kitchen', 8], ['propertyForm', 7], ['laundry', 4], ['eating', 3],
   ]);
   const eating = livability.subcategories[livability.subcategories.length - 1];
   assert.deepEqual(idWeights(eating.criteria), [['counterSeating', 70], ['diningTableSpace', 30]]);
@@ -962,14 +984,14 @@ test('a house with nothing known scores nothing and has 0% completeness', () => 
     assert.equal(result.score, null, id);
   }
   for (const item of evaluation.categories) assert.equal(item.score, null, item.id);
-  assert.deepEqual(evaluation.completeness, { known: 0, applicable: 72, percent: 0 });
+  assert.deepEqual(evaluation.completeness, { known: 0, applicable: 74, percent: 0 });
   assert.equal(evaluation.overallFit, null);
 });
 
 test('a fully known house is 100% complete', () => {
   const evaluation = evaluate(bestHouse(), configuredSettings());
-  // Covered Route does not apply alongside the attached garage, so 71 of the 72 criteria apply.
-  assert.deepEqual(evaluation.completeness, { known: 71, applicable: 71, percent: 100 });
+  // Covered Route does not apply alongside the attached garage, so 73 of the 74 criteria apply.
+  assert.deepEqual(evaluation.completeness, { known: 73, applicable: 73, percent: 100 });
 });
 
 test('criteria scored from fallback tax and insurance count as known', () => {
@@ -987,20 +1009,20 @@ test('unconfigured Settings leave financial criteria unknown and lower completen
   assert.equal(evaluation.criteria.ongoingCost.state, UNKNOWN);
   assert.equal(evaluation.criteria.cashToClose.state, UNKNOWN);
   assert.equal(evaluation.criteria.requiredWorkCushion.state, UNKNOWN);
-  assert.equal(evaluation.completeness.known, 68);
+  assert.equal(evaluation.completeness.known, 70);
 });
 
 test('unanswered tour reactions count against completeness before a tour', () => {
   const house = bestHouse({ likeBeingHere: null, liveAsIsThreeYears: null, sadIfSold: null, wantToGoBack: null });
   const evaluation = evaluate(house, configuredSettings());
-  assert.equal(evaluation.completeness.known, 67);
-  assert.equal(evaluation.completeness.applicable, 71);
+  assert.equal(evaluation.completeness.known, 69);
+  assert.equal(evaluation.completeness.applicable, 73);
   assert.equal(category(evaluation, 'contentment').score, null);
 });
 
 /**
- * Builds a house with exactly a chosen number of known criteria out of its 70 applicable ones.
- * @param {number} knownCount - Number of criteria to leave known, from 33 to 70.
+ * Builds a house with exactly a chosen number of known criteria out of its 72 applicable ones.
+ * @param {number} knownCount - Number of criteria to leave known, from 34 to 72.
  * @returns {object} The best house with yes/no answers cleared until that many remain known.
  */
 function houseWithKnownCount(knownCount) {
@@ -1011,21 +1033,21 @@ function houseWithKnownCount(knownCount) {
     'tvBackToFrontDoor', 'tvBackToWindows', 'christmasTreeSpot', 'sinkStoveWorks', 'dishwasherBesideSink',
     'counterBesideStove', 'counterBesideSink', 'cornerLot', 'laundrySupplyStorage', 'laundrySameFloor',
     'laundryUsableSpace', 'counterSeating', 'diningTableSpace', 'likeBeingHere', 'liveAsIsThreeYears',
-    'sadIfSold', 'wantToGoBack', 'guestFullBath', 'trainMinutes', 'groceryMinutes',
+    'sadIfSold', 'wantToGoBack', 'guestFullBath', 'trainMinutes', 'groceryMinutes', 'lightRailMinutes',
   ];
-  // No irrigation to run leaves an even 70 applicable, so exactly half can be known.
+  // No irrigation to run leaves an even 72 applicable, so exactly half can be known.
   const cleared = { irrigation: NA };
-  for (let index = 0; index < 70 - knownCount; index += 1) cleared[clearable[index]] = null;
+  for (let index = 0; index < 72 - knownCount; index += 1) cleared[clearable[index]] = null;
   return bestHouse(cleared);
 }
 
 test('Overall Fit appears at exactly 50% completeness and not below', () => {
-  const atHalf = evaluate(houseWithKnownCount(35), configuredSettings());
-  assert.deepEqual(atHalf.completeness, { known: 35, applicable: 70, percent: 50 });
+  const atHalf = evaluate(houseWithKnownCount(36), configuredSettings());
+  assert.deepEqual(atHalf.completeness, { known: 36, applicable: 72, percent: 50 });
   assert.notEqual(atHalf.overallFit, null);
 
-  const belowHalf = evaluate(houseWithKnownCount(34), configuredSettings());
-  assert.equal(belowHalf.completeness.known, 34);
+  const belowHalf = evaluate(houseWithKnownCount(35), configuredSettings());
+  assert.equal(belowHalf.completeness.known, 35);
   assert.equal(belowHalf.overallFit, null);
 });
 
@@ -1074,17 +1096,17 @@ test('delight features change no category score and no completeness', () => {
 });
 
 test('the delight bonus never makes Overall Fit appear below the completeness gate', () => {
-  // Trading exterior steps for the private bathroom answer keeps 34 of 70 known, just under half.
-  const house = houseWithKnownCount(34);
+  // Trading exterior steps for the private bathroom answer keeps 35 of 72 known, just under half.
+  const house = houseWithKnownCount(35);
   const delightful = { ...house, privatePrimaryBath: YES, exteriorSteps: null, fireplace: YES, bayWindow: YES };
   const evaluation = evaluate(delightful, configuredSettings());
-  assert.equal(evaluation.completeness.known, 34);
+  assert.equal(evaluation.completeness.known, 35);
   assert.equal(evaluation.weightedFit, null);
   assert.equal(evaluation.overallFit, null);
   assert.equal(evaluation.delights.length, 4);
 });
 
-test('the private primary bathroom carries 45% of Bathroom & Getting Ready', () => {
+test('the private primary bathroom carries 55% of Bathroom & Getting Ready', () => {
   let bathroom = null;
   for (const item of CATEGORIES) {
     for (const sub of item.subcategories) {
@@ -1092,13 +1114,14 @@ test('the private primary bathroom carries 45% of Bathroom & Getting Ready', () 
     }
   }
   assert.deepEqual(idWeights(bathroom.criteria), [
-    ['privatePrimaryBath', 45],
-    ['skincareOnCounter', 17],
-    ['tub', 12],
-    ['outletAtVanity', 10],
-    ['vanityStorage', 7],
-    ['linenStorage', 6],
-    ['medicineCabinet', 3],
+    ['privatePrimaryBath', 55],
+    ['bathroomCount', 15],
+    ['skincareOnCounter', 9],
+    ['tub', 7],
+    ['outletAtVanity', 6],
+    ['vanityStorage', 4],
+    ['linenStorage', 3],
+    ['medicineCabinet', 1],
   ]);
 });
 
@@ -1108,9 +1131,9 @@ test('the private primary bathroom carries 45% of Bathroom & Getting Ready', () 
 
 test('fixture: the best possible house', () => {
   const evaluation = evaluate(bestHouse(), configuredSettings());
-  // Only the carport criterion falls short: its best score is 65. Covered Route (5) does not apply.
-  const parking = 100 - (11 * 35) / 95;
-  const livability = 100 - 0.08 * (100 - parking);
+  // Only the carport criterion falls short: its best score is 65. Covered Route (3) does not apply.
+  const parking = 100 - (6 * 35) / 97;
+  const livability = 100 - 0.14 * (100 - parking);
   assertClose(subcategory(evaluation, 'livability', 'parking').score, parking, 'parking');
   assertClose(category(evaluation, 'livability').score, livability, 'livability');
   assertClose(category(evaluation, 'stability').score, 100, 'stability');
@@ -1134,14 +1157,14 @@ test('fixture: a toured house with specific weaknesses', () => {
   house = withProject(house, 'office', { state: PROJECT_WANT, excited: NO });
   const evaluation = evaluate(house, configuredSettings());
 
-  const location = 0.45 * 90 + 0.35 * 100 + 0.2 * 100;
-  const parking = 100 - (11 * 35) / 95;
-  const livability = 100 - 0.15 * (100 - location) - 0.08 * (100 - parking);
+  const location = 0.4 * 80 + 0.3 * 100 + 0.18 * 100 + 0.12 * 100;
+  const parking = 100 - (6 * 35) / 97;
+  const livability = 100 - 0.16 * (100 - location) - 0.14 * (100 - parking);
   const majorSystems = 100 - 0.12 * 35;
   const stability = 0.45 * 100 + 0.35 * 100 + 0.2 * majorSystems;
   const contentment = 85;
   const creativeAuthorship = 95 - 10;
-  const proximity = 0.69 * 100 + 0.31 * 85;
+  const proximity = 0.69 * 100 + 0.31 * 50;
   const deepConnection = 0.45 * 100 + 0.4 * proximity + 0.15 * 0;
 
   assertClose(category(evaluation, 'livability').score, livability, 'livability');
@@ -1171,9 +1194,10 @@ test('fixture: an untoured house with finances and travel times only', () => {
   const evaluation = evaluate(house, configuredSettings());
 
   assertClose(category(evaluation, 'stability').score, 100, 'stability from ongoing cost alone');
-  const location = 0.45 * 70 + 0.35 * 95 + 0.2 * 100;
-  assertClose(category(evaluation, 'livability').score, (15 * location + 8 * 100) / 23, 'livability');
-  assertClose(category(evaluation, 'deepConnection').score, 0.69 * 90 + 0.31 * 95, 'deep connection');
+  // Light rail is unknown, so Location renormalizes over the other 88%.
+  const location = (40 * 50 + 30 * 90 + 18 * 100) / 88;
+  assertClose(category(evaluation, 'livability').score, (16 * location + 7 * 100) / 23, 'livability');
+  assertClose(category(evaluation, 'deepConnection').score, 85, 'deep connection');
   assert.equal(category(evaluation, 'contentment').score, null);
   assert.equal(category(evaluation, 'creativeAuthorship').score, null);
 
@@ -1190,12 +1214,12 @@ test('fixture: a house with an uncosted repair', () => {
   assert.equal(category(evaluation, 'stability').unavailableReason, STABILITY_UNCOSTED_WORK);
   assert.equal(evaluation.criteria.requiredWorkCushion.state, UNKNOWN);
   assert.equal(evaluation.criteria.cashToClose.state, KNOWN);
-  assert.equal(evaluation.completeness.known, 70);
+  assert.equal(evaluation.completeness.known, 72);
   assertClose(subcategory(evaluation, 'stability', 'majorSystems').score, 88, 'major systems');
 
   const costed = evaluate(withProject(house, 'roof', { state: PROJECT_NEED, cost: 18000 }), configuredSettings());
   assertClose(category(costed, 'stability').score, 0.8 * 100 + 0.2 * 88, 'stability once costed');
-  assert.equal(costed.completeness.known, 71);
+  assert.equal(costed.completeness.known, 73);
 });
 
 test('status has no effect on any score', () => {
@@ -1546,8 +1570,8 @@ test('an attached garage difference includes its delight point in Biggest differ
   const noGarage = bestHouse({ parking: ['carport', 'driveway', 'dedicatedUncovered', 'street'] });
   const comparison = compareHouses(bestHouse(), noGarage);
   const garage = comparedRow(comparison, 'garage');
-  // 34% × Parking 8% × Garage 40% × 100, plus the one-point delight.
-  assertClose(garage.impact, 0.34 * 0.08 * 0.4 * 100 + 1, 'garage impact');
+  // 34% × Parking 14% × Garage 45% × 100, plus the one-point delight.
+  assertClose(garage.impact, 0.34 * 0.14 * 0.45 * 100 + 1, 'garage impact');
   assert.equal(garage.delight, 'attachedGarage');
   assert.ok(comparison.differences.includes(garage));
   assert.deepEqual(comparison.delights, []);
@@ -1555,7 +1579,7 @@ test('an attached garage difference includes its delight point in Biggest differ
 
 test('a private primary bathroom difference includes its delight point', () => {
   const row = comparedRow(compareHouses(bestHouse(), bestHouse({ privatePrimaryBath: NO })), 'privatePrimaryBath');
-  assertClose(row.impact, 0.34 * 0.13 * 0.45 * 100 + 1, 'impact');
+  assertClose(row.impact, 0.34 * 0.17 * 0.55 * 100 + 1, 'impact');
 });
 
 test('a delight with no criterion to carry it gets a row of its own, worth one point', () => {
@@ -1683,13 +1707,13 @@ test('facts in one subcategory moving the same way share a line', () => {
 test('a delight that is also a criterion joins its line and adds one point', () => {
   const bath = climb(bestHouse({ privatePrimaryBath: NO }), bestHouse());
   assert.deepEqual(factIds(bath), [['privatePrimaryBath']]);
-  // 34% × 13% × 45% × 100, plus the one-point delight.
-  assertClose(bath.facts[0].impact, 0.34 * 0.13 * 0.45 * 100 + 1, 'impact');
+  // 34% × 17% × 55% × 100, plus the one-point delight.
+  assertClose(bath.facts[0].impact, 0.34 * 0.17 * 0.55 * 100 + 1, 'impact');
 
   // Detached to attached garage is a small Garage gain that the delight lifts over the floor.
   const garage = climb(bestHouse({ parking: ['detachedGarage', 'carport', 'driveway', 'dedicatedUncovered', 'street'] }), bestHouse());
   assert.deepEqual(factIds(garage), [['garage']]);
-  assertClose(garage.facts[0].impact, 15 * 0.34 * 0.08 * 0.4 + 1, 'impact');
+  assertClose(garage.facts[0].impact, 15 * 0.34 * 0.14 * 0.45 + 1, 'impact');
 });
 
 test('a delight with no criterion is its own fact, and only between known answers', () => {

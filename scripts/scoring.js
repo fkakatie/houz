@@ -50,11 +50,14 @@ export const STABILITY_UNCOSTED_WORK = 'uncostedRequiredWork';
 
 // Each curve is a list of [value, score] breakpoints, lowest value first.
 export const CURVES = {
-  train: [[0, 100], [5, 100], [10, 90], [15, 70], [20, 45], [25, 20], [30, 0]],
-  grocery: [[0, 100], [5, 100], [10, 95], [15, 80], [20, 60], [25, 40], [30, 20], [40, 0]],
-  freeway: [[0, 100], [5, 100], [10, 90], [15, 75], [20, 55], [30, 25], [40, 0]],
-  parents: [[0, 100], [10, 100], [15, 100], [20, 90], [30, 70], [40, 45], [50, 20], [60, 0]],
-  airport: [[0, 100], [15, 100], [20, 95], [30, 85], [40, 65], [50, 40], [60, 15], [75, 0]],
+  train: [[0, 100], [5, 100], [10, 80], [15, 50], [20, 25], [30, 0]],
+  grocery: [[0, 100], [5, 100], [10, 90], [15, 75], [20, 50], [25, 30], [30, 15], [40, 0]],
+  lightRail: [[0, 100], [5, 100], [10, 80], [15, 50], [20, 25], [30, 0]],
+  freeway: [[0, 100], [5, 100], [10, 80], [15, 50], [20, 30], [30, 0]],
+  parents: [[0, 100], [15, 100], [20, 85], [30, 50], [40, 25], [50, 10], [60, 0]],
+  airport: [[0, 100], [15, 100], [20, 85], [30, 50], [40, 25], [50, 10], [60, 0]],
+  // Fewer than two bathrooms scores nothing, and nothing is added past two and a half.
+  bathrooms: [[1.5, 0], [2, 75], [2.5, 100]],
   exteriorSteps: [[0, 100], [1, 100], [3, 95], [5, 80], [8, 55], [12, 20], [15, 0]],
   // Required work as a share of the required-work cushion.
   cushionShare: [[0, 100], [0.25, 100], [0.5, 85], [0.75, 60], [1, 30], [1.5, 0]],
@@ -198,35 +201,53 @@ export const CATEGORIES = [
       {
         id: 'location',
         label: 'Location',
-        weight: 15,
+        weight: 16,
         criteria: [
-          { id: 'train', label: 'Train', weight: 45, type: 'curve', field: 'trainMinutes', curve: CURVES.train, unit: 'min' },
-          { id: 'grocery', label: 'Grocery', weight: 35, type: 'curve', field: 'groceryMinutes', curve: CURVES.grocery, unit: 'min' },
-          { id: 'freeway', label: 'Freeway', weight: 20, type: 'curve', field: 'freewayMinutes', curve: CURVES.freeway, unit: 'min' },
+          { id: 'train', label: 'Train', weight: 40, type: 'curve', field: 'trainMinutes', curve: CURVES.train, unit: 'min' },
+          { id: 'grocery', label: 'Grocery', weight: 30, type: 'curve', field: 'groceryMinutes', curve: CURVES.grocery, unit: 'min' },
+          { id: 'freeway', label: 'Freeway', weight: 18, type: 'curve', field: 'freewayMinutes', curve: CURVES.freeway, unit: 'min' },
+          {
+            id: 'lightRail',
+            label: 'Light rail',
+            weight: 12,
+            type: 'curve',
+            field: 'lightRailMinutes',
+            curve: CURVES.lightRail,
+            unit: 'min',
+          },
         ],
       },
       {
         id: 'bathroom',
         label: 'Bathroom & Getting Ready',
-        weight: 13,
+        weight: 17,
         criteria: [
-          { id: 'privatePrimaryBath', label: 'Private primary bathroom', weight: 45, type: 'yes', field: 'privatePrimaryBath' },
-          { id: 'skincareOnCounter', label: 'Skincare can live on counter', weight: 17, type: 'yes', field: 'skincareOnCounter' },
+          { id: 'privatePrimaryBath', label: 'Private primary bathroom', weight: 55, type: 'yes', field: 'privatePrimaryBath' },
+          {
+            id: 'bathroomCount',
+            label: 'Bathrooms',
+            weight: 15,
+            type: 'curve',
+            field: 'bathrooms',
+            curve: CURVES.bathrooms,
+            unit: 'baths',
+          },
+          { id: 'skincareOnCounter', label: 'Skincare can live on counter', weight: 9, type: 'yes', field: 'skincareOnCounter' },
           {
             id: 'tub',
             label: 'Tub',
-            weight: 12,
+            weight: 7,
             type: 'map',
             field: 'tubAvailability',
-            scores: { primary: 100, elsewhere: 85, none: 0 },
+            scores: { primary: 100, elsewhere: 50, none: 0 },
           },
-          { id: 'outletAtVanity', label: 'Outlet at vanity', weight: 10, type: 'yes', field: 'outletAtVanity' },
-          { id: 'vanityStorage', label: 'Vanity storage', weight: 7, type: 'option', field: 'bathroomStorage', option: 'vanity' },
-          { id: 'linenStorage', label: 'Linen storage', weight: 6, type: 'option', field: 'bathroomStorage', option: 'linen' },
+          { id: 'outletAtVanity', label: 'Outlet at vanity', weight: 6, type: 'yes', field: 'outletAtVanity' },
+          { id: 'vanityStorage', label: 'Vanity storage', weight: 4, type: 'option', field: 'bathroomStorage', option: 'vanity' },
+          { id: 'linenStorage', label: 'Linen storage', weight: 3, type: 'option', field: 'bathroomStorage', option: 'linen' },
           {
             id: 'medicineCabinet',
             label: 'Medicine cabinet',
-            weight: 3,
+            weight: 1,
             type: 'option',
             field: 'bathroomStorage',
             option: 'medicineCabinet',
@@ -236,7 +257,7 @@ export const CATEGORIES = [
       {
         id: 'primaryBedroom',
         label: 'Primary Bedroom',
-        weight: 10,
+        weight: 9,
         criteria: [
           {
             id: 'bedroomFloor',
@@ -253,14 +274,14 @@ export const CATEGORIES = [
             weight: 20,
             type: 'map',
             field: 'closetType',
-            scores: { walkIn: 100, reachIn: 70 },
+            scores: { walkIn: 100, reachIn: 50 },
           },
         ],
       },
       {
         id: 'householdStorage',
         label: 'Household Storage',
-        weight: 10,
+        weight: 8,
         criteria: [
           { id: 'storageVacuum', label: 'Vacuum / broom storage', weight: 30, type: 'yes', field: 'storageVacuum' },
           { id: 'storageCleaning', label: 'Cleaning supply storage', weight: 25, type: 'yes', field: 'storageCleaning' },
@@ -272,35 +293,35 @@ export const CATEGORIES = [
       {
         id: 'exterior',
         label: 'Exterior & Upkeep',
-        weight: 10,
+        weight: 6,
         criteria: [
-          { id: 'matureTrees', label: 'Mature trees', weight: 35, type: 'yes', field: 'matureTrees' },
-          { id: 'noParkStrip', label: 'Park strip', weight: 27, type: 'no', field: 'parkStrip' },
-          { id: 'irrigation', label: 'Automatic irrigation', weight: 22, type: 'irrigation' },
-          { id: 'noSidewalkToShovel', label: 'Sidewalk to shovel', weight: 16, type: 'no', field: 'sidewalkToShovel' },
+          { id: 'noParkStrip', label: 'Park strip', weight: 32, type: 'no', field: 'parkStrip' },
+          { id: 'irrigation', label: 'Automatic irrigation', weight: 28, type: 'irrigation' },
+          { id: 'matureTrees', label: 'Mature trees', weight: 20, type: 'yes', field: 'matureTrees' },
+          { id: 'noSidewalkToShovel', label: 'Sidewalk to shovel', weight: 20, type: 'no', field: 'sidewalkToShovel' },
         ],
       },
       {
         id: 'parking',
         label: 'Parking & Arrival',
-        weight: 8,
+        weight: 14,
         criteria: [
-          { id: 'garage', label: 'Garage', weight: 40, type: 'garage' },
-          { id: 'functionalEntry', label: 'Entry / drop zone', weight: 13, type: 'functionalEntry' },
+          { id: 'garage', label: 'Garage', weight: 45, type: 'garage' },
+          { id: 'driveway', label: 'Driveway', weight: 20, type: 'option', field: 'parking', option: 'driveway' },
+          { id: 'functionalEntry', label: 'Entry / drop zone', weight: 10, type: 'functionalEntry' },
           {
             id: 'carport',
             label: 'Carport',
-            weight: 11,
+            weight: 6,
             type: 'option',
             field: 'parking',
             option: 'carport',
             score: CARPORT_SCORE,
           },
-          { id: 'driveway', label: 'Driveway', weight: 10, type: 'option', field: 'parking', option: 'driveway' },
           {
             id: 'exteriorSteps',
             label: 'Exterior steps',
-            weight: 8,
+            weight: 6,
             type: 'curve',
             field: 'exteriorSteps',
             curve: CURVES.exteriorSteps,
@@ -309,13 +330,13 @@ export const CATEGORIES = [
           {
             id: 'dedicatedUncovered',
             label: 'Dedicated uncovered parking',
-            weight: 5,
+            weight: 3,
             type: 'option',
             field: 'parking',
             option: 'dedicatedUncovered',
           },
-          { id: 'coveredRoute', label: 'Covered route to house', weight: 5, type: 'coveredRoute' },
-          { id: 'streetParking', label: 'Street parking', weight: 3, type: 'option', field: 'parking', option: 'street' },
+          { id: 'coveredRoute', label: 'Covered route to house', weight: 3, type: 'coveredRoute' },
+          { id: 'streetParking', label: 'Street parking', weight: 2, type: 'option', field: 'parking', option: 'street' },
           { id: 'garageWorkspace', label: 'Garage workspace', weight: 2, type: 'garageWorkspace' },
           { id: 'parkingCombination', label: 'Parking combination', weight: 3, type: 'parkingCombination' },
         ],
@@ -347,7 +368,7 @@ export const CATEGORIES = [
       {
         id: 'propertyForm',
         label: 'Property Form',
-        weight: 8,
+        weight: 7,
         criteria: [
           {
             id: 'detached',
@@ -363,7 +384,7 @@ export const CATEGORIES = [
       {
         id: 'laundry',
         label: 'Laundry',
-        weight: 6,
+        weight: 4,
         criteria: [
           { id: 'laundrySupplyStorage', label: 'Laundry supply storage', weight: 45, type: 'yes', field: 'laundrySupplyStorage' },
           { id: 'laundrySameFloor', label: 'Laundry on same floor as primary', weight: 30, type: 'yes', field: 'laundrySameFloor' },
@@ -373,7 +394,7 @@ export const CATEGORIES = [
       {
         id: 'eating',
         label: 'Eating',
-        weight: 4,
+        weight: 3,
         criteria: [
           { id: 'counterSeating', label: 'Counter / bar seating', weight: 70, type: 'yes', field: 'counterSeating' },
           { id: 'diningTableSpace', label: 'Dining table space', weight: 30, type: 'yes', field: 'diningTableSpace' },
