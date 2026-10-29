@@ -145,6 +145,7 @@ export const HOUSE_FIELDS = {
   // Travel times, in minutes
   trainMinutes: { kind: NUMBER },
   groceryMinutes: { kind: NUMBER },
+  lightRailMinutes: { kind: NUMBER },
   freewayMinutes: { kind: NUMBER },
   parentsMinutes: { kind: NUMBER },
   airportMinutes: { kind: NUMBER },

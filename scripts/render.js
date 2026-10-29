@@ -244,6 +244,7 @@ export const HOUSE_SECTIONS = [
       { name: 'longitude', label: 'Longitude', coordinate: true, counts: false, hint: 'Decimal degrees, such as -111.8160' },
       { name: 'trainMinutes', label: 'Scooter time to train', suffix: 'min' },
       { name: 'groceryMinutes', label: 'Scooter time to grocery', suffix: 'min' },
+      { name: 'lightRailMinutes', label: 'Walk time to light rail', suffix: 'min' },
       { name: 'freewayMinutes', label: 'Drive time to freeway', suffix: 'min' },
       { name: 'parentsMinutes', label: 'Drive time to parents', suffix: 'min' },
       { name: 'airportMinutes', label: 'Drive time to airport', suffix: 'min' },
